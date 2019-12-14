@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.kgc.mapper.UserMapper">
+	<select id="queryUserList" parameterType="User" resultType="User">
+		select * from user  where 1=1
+		 		<if test="userId != 0 ">
+		 			and userId=#{userId}
+		 		</if>
+		 		<if test="userName != null">
+		 			and userName=#{userName}
+		 		</if>
+		 		<if test="userPassword != null">
+		 			and userPassword = #{userPassword}
+		 		</if>
+		 		<if test="email != null">
+		 			and email = #{email}
+		 		</if>
+		 		<if test="phone != null">
+		 			and phone = #{phone}
+		 		</if>
+	</select>
+	<select id="getLoginUser" parameterType="String" resultType="User">
+		select * from `user` where userName=#{userName} and userPassword=#{passWord}
+	</select>
+</mapper>
+
