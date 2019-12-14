@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+	http://www.springframework.org/schema/tx
+    http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-4.2.xsd">
+	<!-- 注解扫描器 -->
+	<context:component-scan base-package="cn.kgc.service" />
+	<!-- 开启切面注解功能 -->
+	<aop:aspectj-autoproxy />
+	<!-- 引入数据库属性配置文件 -->
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location">
+			<value>classpath:database.properties</value>
+		</property>
+	</bean>
+	<!-- spring集成连接池和数据源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${DB_DRIVER}" />
+		<property name="url" value="${DB_URL}" />
+		<property name="username" value="${DB_USERNAME}"/>
+		<property name="password" value="${DB_PASSWORD}"/>
+	</bean>
+	<!-- 集成mybatis/ Hibernate / Spring JPA -->
+	<!--扫描Mapper映射文件 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:mybatis-config.xml"/>
+		<property name="mapperLocations">
+			<list>
+				<value>classpath:mappers/*.xml</value>
+			</list>
+		</property>
+	</bean>
+	<!--扫描Mapper接口  -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="cn.kgc.mapper"/>
+	</bean>
+	<!-- 添加事务管理器 对应 aop增强类-->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	<!-- 定义切入点 -->
+	<tx:advice id="txAdvice">
+		<tx:attributes>
+			<tx:method name="query*" propagation="SUPPORTS"/>
+			<tx:method name="insert*" propagation="REQUIRED"/>
+			<tx:method name="update*" propagation="REQUIRED"/>
+			<tx:method name="del*" propagation="REQUIRED"/>
+			<tx:method name="*" propagation="REQUIRED"/><!--命名方法名不规范之人准备之 -->
+		</tx:attributes>
+	</tx:advice>
+	<!-- 配置切面将增强类和切入点组合 -->
+	<aop:config>
+		<aop:pointcut expression="execution(* cn.kgc.service..*.*(..))" id="serviceMethod"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod"/>
+	</aop:config>
+</beans>
